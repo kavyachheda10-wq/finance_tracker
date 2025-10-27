@@ -1,0 +1,157 @@
+import pandas as pd
+import csv as csv_module
+from datetime import datetime
+
+class FinanceCSV:
+    csv_file = "finance_data.csv"
+    COLUMNS = ["date", "amount", "category", "description"]
+
+    @classmethod
+    def initialize_csv(cls):
+        try:
+            pd.read_csv(cls.csv_file)
+        except FileNotFoundError:
+            df = pd.DataFrame(columns=cls.COLUMNS)
+            df.to_csv(cls.csv_file, index=False)
+
+    @classmethod
+    def add_entry(cls, date, amount, category, description):
+        cls.initialize_csv()
+        new_entry = {
+            "date": date,
+            "amount": amount,
+            "category": category,
+            "description": description
+        }
+        with open(cls.csv_file, mode='a', newline='') as csv_file:
+            writer = csv_module.DictWriter(csv_file, fieldnames=cls.COLUMNS)
+            writer.writerow(new_entry)
+        print("Entry added successfully.")
+
+    @classmethod
+    def show_entries(cls):
+        try:
+            df = pd.read_csv(cls.csv_file)
+            print(df)
+        except FileNotFoundError:
+            print("No entries found.")
+
+    @classmethod
+    def filter_by_category(cls, category):
+        try:
+            df = pd.read_csv(cls.csv_file)
+            filtered = df[df['category'] == category]
+            print(filtered)
+        except FileNotFoundError:
+            print("No entries found.")
+
+    @classmethod
+    def filter_by_date_range(cls, start_date, end_date):
+        try:
+            df = pd.read_csv(cls.csv_file)
+            df['date'] = pd.to_datetime(df['date'])
+            mask = (df['date'] >= start_date) & (df['date'] <= end_date)
+            print(df.loc[mask])
+        except FileNotFoundError:
+            print("No entries found.")
+
+    @classmethod
+    def summary(cls):
+        try:
+            df = pd.read_csv(cls.csv_file)
+            total = df['amount'].sum()
+            print(f"Total amount: {total}")
+            print("By category:")
+            print(df.groupby('category')['amount'].sum())
+        except FileNotFoundError:
+            print("No entries found.")
+
+    @classmethod
+    def edit_entry(cls, index, date=None, amount=None, category=None, description=None):
+        try:
+            df = pd.read_csv(cls.csv_file)
+            if index < 0 or index >= len(df):
+                print("Invalid index.")
+                return
+            if date:
+                df.at[index, 'date'] = date
+            if amount:
+                df.at[index, 'amount'] = amount
+            if category:
+                df.at[index, 'category'] = category
+            if description:
+                df.at[index, 'description'] = description
+            df.to_csv(cls.csv_file, index=False)
+            print("Entry updated.")
+        except FileNotFoundError:
+            print("No entries found.")
+
+    @classmethod
+    def delete_entry(cls, index):
+        try:
+            df = pd.read_csv(cls.csv_file)
+            if index < 0 or index >= len(df):
+                print("Invalid index.")
+                return
+            df = df.drop(index)
+            df.to_csv(cls.csv_file, index=False)
+            print("Entry deleted.")
+        except FileNotFoundError:
+            print("No entries found.")
+
+# Example usage:
+if __name__ == "__main__":
+    while True:
+        print("\nPersonal Finance Tracker")
+        print("1. Add entry")
+        print("2. Show all entries")
+        print("3. Filter by category")
+        print("4. Filter by date range")
+        print("5. Show summary")
+        print("6. Edit entry")
+        print("7. Delete entry")
+        print("8. Exit")
+        choice = input("Choose an option: ")
+
+        if choice == '1':
+            date = input("Date (YYYY-MM-DD): ")
+            amount = float(input("Amount: "))
+            category = input("Category: ")
+            description = input("Description: ")
+            FinanceCSV.add_entry(date, amount, category, description)
+        elif choice == '2':
+            FinanceCSV.show_entries()
+        elif choice == '3':
+            category = input("Category to filter: ")
+            FinanceCSV.filter_by_category(category)
+        elif choice == '4':
+            start_date = input("Start date (YYYY-MM-DD): ")
+            end_date = input("End date (YYYY-MM-DD): ")
+            FinanceCSV.filter_by_date_range(start_date, end_date)
+        elif choice == '5':
+            FinanceCSV.summary()
+        elif choice == '6':
+            index = int(input("Entry index to edit: "))
+            date = input("New date (leave blank to keep current): ")
+            amount = input("New amount (leave blank to keep current): ")
+            category = input("New category (leave blank to keep current): ")
+            description = input("New description (leave blank to keep current): ")
+            FinanceCSV.edit_entry(
+                index,
+                date if date else None,
+                float(amount) if amount else None,
+                category if category else None,
+                description if description else None
+            )
+        elif choice == '7':
+            index = int(input("Entry index to delete: "))
+            FinanceCSV.delete_entry(index)
+        elif choice == '8':
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice. Try again.")
+
+
+
+
